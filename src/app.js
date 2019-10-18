@@ -1,5 +1,6 @@
 const Koa = require('koa');
 
+require('./api/passport');
 const logger = require('koa-logger');
 const parser = require('koa-bodyparser');
 const router = require('./router');

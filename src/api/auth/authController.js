@@ -1,16 +1,21 @@
 // models load
 const db = require('../../models');
+const jwt = require('jsonwebtoken');
+const passport = require('koa-passport');
+const config = require('../../config');
 
 /*
   POST /api/auth/register
   {
     email,
     password,
+    studentId,
     name,
+    birth
   }
 */
 exports.register = async (ctx, next) => {
-  const { email, password, name } = ctx.request.body;
+  const { email, password, studentId, name, birth } = ctx.request.body;
 
   // 중복 확인
   const existUser = await db.User.findOne({
@@ -20,10 +25,9 @@ exports.register = async (ctx, next) => {
     ctx.throw(409, "User already exists.");
   }
 
-  const result = await db.User.create({ email, password, name });
+  await db.User.create({ email, password, name, studentId, birth });
   ctx.body = {
     message: "Register Successfully!",
-    isAdmin: result.admin,
   }
 };
 
@@ -31,22 +35,34 @@ exports.register = async (ctx, next) => {
 /*
   POST /api/auth/login
   {
-    username,
+    email,
     password
   }
  */
 exports.login = async (ctx, next) => {
-  // const { username, password } = ctx.request.body;
-  // const user = await User.findOneByUsername(username);
-  //
-  // if (!user) {
-  //   ctx.throw(404, "User doesn't exist.");
-  // }
-  // if (!user.verify(password)) {
-  //   ctx.throw(403, "Login failed: Wrong password.");
-  // }
-  //
-  // ctx.body = {
-  //   message: "Login Success."
-  // };
+  return passport.authenticate('local', (err, user, info, status) => {
+    if (err) {
+      ctx.status = 400;
+      ctx.body = {
+        message: 'Something is not right.',
+        user: user,
+      };
+      return;
+    } else if (!user) {
+      ctx.status = 404;
+      ctx.body = {
+        message: 'User not found.',
+        user: user,
+      };
+      return;
+    }
+
+    const token = jwt.sign(user.toJSON(), config.secret);
+    ctx.status = 200;
+    ctx.body = {
+      email: user.email,
+      name: user.name,
+      token,
+    };
+  })(ctx);
 };

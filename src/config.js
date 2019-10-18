@@ -1,4 +1,5 @@
 const config = {
+  secret: 'my-secret-key',
   development: {
     DB: {
       name: 'toyproject_db',
