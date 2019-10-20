@@ -2,7 +2,7 @@
 const db = require('../../models');
 const jwt = require('jsonwebtoken');
 const passport = require('koa-passport');
-const config = require('../../config');
+const config = require('../../../config');
 
 /*
   POST /api/auth/register
